@@ -45,8 +45,13 @@ int is_equal(void* key1, void* key2){
 // Inicialice el índice current a -1.
 
 HashMap * createMap(long capacity) {
+    HashMap * map = (HashMap *)malloc(sizeof(HashMap));
+    map->buckets = (Pair **)calloc(capacity, sizeof(Pair *));
+    map->size = 0;
+    map->capacity = capacity;
+    map->current = -1;
 
-    return NULL;
+    return map;
 }
 
 // 2. Implemente la función void insertMap(HashMap * map, char * key, void * value). 
@@ -59,7 +64,25 @@ HashMap * createMap(long capacity) {
 // No inserte claves repetidas. Recuerde que el arreglo es circular. Recuerde actualizar la variable size.
 
 void insertMap(HashMap * map, char * key, void * value) {
+    long pos = hash(key, map->capacity);
+    while(map->buckets[pos] != NULL && map->buckets[pos]->key != NULL) {
+        if(is_equal(map->buckets[pos]->key, key))
+            return;
 
+        pos = (pos + 1) % map->capacity;
+    }
+    if((double)(map->size + 1) / map->capacity > 0.7)
+        enlarge(map);
+
+    pos = hash(key, map->capacity);
+
+    while(map->buckets[pos] != NULL &&
+          map->buckets[pos]->key != NULL)
+        pos = (pos + 1) % map->capacity;
+
+    map->buckets[pos] = createPair(key, value);
+    map->current = pos;
+    map->size++;
 }
 
 // 3. Implemente la función Pair * searchMap(HashMap * map, char * key), la cual retorna el Pair asociado a la clave ingresada. 
@@ -69,8 +92,20 @@ void insertMap(HashMap * map, char * key, void * value) {
 //   c - Si llega a una casilla nula, retorne NULL inmediatamente (no siga avanzando, la clave no está)
 // Recuerde actualizar el índice current a la posición encontrada. Recuerde que el arreglo es circular.
 
-Pair * searchMap(HashMap * map,  char * key) {   
+Pair * searchMap(HashMap * map, char * key) {
+    long pos = hash(key, map->capacity);
+    long start = pos;
+    while (map->buckets[pos] != NULL) {
+        if (map->buckets[pos]->key != NULL &&
+            is_equal(map->buckets[pos]->key, key)) {
+            map->current = pos;
+            return map->buckets[pos];
+        }
 
+        pos = (pos + 1) % map->capacity;
+        if (pos == start)
+            return NULL;
+    }
 
     return NULL;
 }
@@ -81,9 +116,12 @@ Pair * searchMap(HashMap * map,  char * key) {
 // No elimine el par, sólo invalídelo asignando NULL a la clave (pair->key=NULL). 
 // Recuerde actualizar la variable size.
 
-void eraseMap(HashMap * map,  char * key) {    
-
-
+void eraseMap(HashMap * map, char * key) {
+    Pair * pair = searchMap(map, key);
+    if (pair != NULL) {
+        pair->key = NULL;
+        map->size--;
+    }
 }
 
 // 5. Implemente las funciones para recorrer la estructura: Pair * firstMap(HashMap * map) retorna el primer Pair válido del arreglo buckets. 
@@ -91,14 +129,25 @@ void eraseMap(HashMap * map,  char * key) {
 // Recuerde actualizar el índice.
 
 Pair * firstMap(HashMap * map) {
-
-    return NULL;
+for (long i = 0; i < map->capacity; i++) {
+    if (map->buckets[i] != NULL &&
+        map->buckets[i]->key != NULL) {
+        map->current = i;
+        return map->buckets[i];
+    }
 }
 
-Pair * nextMap(HashMap * map) {
 
-    return NULL;
-}
+    Pair * nextMap(HashMap * map) {
+        for (long i = map->current + 1; i < map->capacity; i++) {
+            if (map->buckets[i] != NULL &&
+                map->buckets[i]->key != NULL) {
+                map->current = i;
+                return map->buckets[i];
+            }
+        }
+        return NULL;
+    }
 
 
 // 6.- Implemente la función void enlarge(HashMap * map). Esta función agranda la capacidad del arreglo buckets y reubica todos sus elementos. 
@@ -112,11 +161,23 @@ Pair * nextMap(HashMap * map) {
 //   d - Inicialice size a 0.
 //   e - Inserte los elementos válidos del arreglo old_buckets en el mapa (use la función insertMap que ya implementó).
 
-void enlarge(HashMap * map) {
-    enlarge_called = 1; //no borrar (testing purposes)
+    void enlarge(HashMap * map) {
+        enlarge_called = 1; //no borrar (testing purposes)
 
+        Pair ** old_buckets = map->buckets;
+        long old_capacity = map->capacity;
+        map->capacity = map->capacity * 2;
+        map->buckets = calloc(map->capacity, sizeof(Pair *));
+        map->size = 0;
+        for (long i = 0; i < old_capacity; i++) {
+            if (old_buckets[i] != NULL &&
+                old_buckets[i]->key != NULL) {
+                insertMap(map, old_buckets[i]->key, old_buckets[i]->value);
+            }
+        }
 
-}
+        free(old_buckets);
+    }
 
 
 
