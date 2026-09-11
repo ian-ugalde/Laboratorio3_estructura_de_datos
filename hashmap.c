@@ -128,26 +128,36 @@ void eraseMap(HashMap * map, char * key) {
 // Pair * nextMap(HashMap * map) retorna el siguiente Pair del arreglo buckets a partir índice current. 
 // Recuerde actualizar el índice.
 
-Pair * firstMap(HashMap * map) {
-for (long i = 0; i < map->capacity; i++) {
-    if (map->buckets[i] != NULL &&
-        map->buckets[i]->key != NULL) {
-        map->current = i;
-        return map->buckets[i];
-    }
-}
+    Pair * firstMap(HashMap * map) {
 
+        for (long i = 0; i < map->capacity; i++) {
 
-    Pair * nextMap(HashMap * map) {
-        for (long i = map->current + 1; i < map->capacity; i++) {
             if (map->buckets[i] != NULL &&
                 map->buckets[i]->key != NULL) {
+
                 map->current = i;
                 return map->buckets[i];
             }
         }
+
         return NULL;
+    }     
+
+
+Pair * nextMap(HashMap * map) {
+
+    for (long i = map->current + 1; i < map->capacity; i++) {
+
+        if (map->buckets[i] != NULL &&
+            map->buckets[i]->key != NULL) {
+
+            map->current = i;
+            return map->buckets[i];
+        }
     }
+
+    return NULL;
+}
 
 
 // 6.- Implemente la función void enlarge(HashMap * map). Esta función agranda la capacidad del arreglo buckets y reubica todos sus elementos. 
